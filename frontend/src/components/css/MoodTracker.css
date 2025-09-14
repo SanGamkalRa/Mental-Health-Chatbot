@@ -1,0 +1,100 @@
+.mood-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: 'Inter', sans-serif;
+  background: #f8f9fd;
+  padding: 20px;
+}
+
+/* Header */
+.mood-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.mood-header h2 {
+  flex: 1;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  font-size: 22px;
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #764ba2;
+  position: absolute;
+  left: 0;
+}
+
+/* Mood select */
+.mood-select {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.mood-options {
+  font-size: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 15px 0;
+  cursor: pointer;
+}
+
+.mood-options span {
+  transition: transform 0.2s;
+}
+
+.mood-options span:hover {
+  transform: scale(1.3);
+}
+
+.today {
+  font-size: 14px;
+  color: #333;
+}
+
+/* Mood content grid */
+.mood-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+}
+
+/* Table */
+.mood-table-container {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.mood-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mood-table th, .mood-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.mood-table th {
+  background: #f0f0f5;
+  font-weight: bold;
+}
+
+/* Chart */
+.mood-chart {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
