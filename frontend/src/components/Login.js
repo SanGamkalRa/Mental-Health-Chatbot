@@ -1,5 +1,5 @@
-// Login.js (updated - mood removed from login/register)
-import React, { useEffect, useState } from "react";
+// src/pages/Login.js
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./css/Login.css";
 
@@ -11,9 +11,14 @@ export default function Login() {
   const [registered, setRegistered] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const didInitRef = useRef(false); // prevents double-run (StrictMode / duplicate effects)
 
   useEffect(() => {
+    if (didInitRef.current) return;
+    didInitRef.current = true;
+
     const token = localStorage.getItem("token");
+    console.log("[Login] useEffect token:", token);
     if (token) {
       navigate("/dashboard", { replace: true });
       return;
@@ -27,6 +32,7 @@ export default function Login() {
       const savedEmail = localStorage.getItem("userEmail");
       if (savedEmail) setEmail(savedEmail);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   // API helper
@@ -42,6 +48,7 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log("[Login] handleLogin start — registered:", registered);
 
     if (!registered) {
       if (!username || !email) {
@@ -53,15 +60,16 @@ export default function Login() {
         const payload = { name: username, email };
         const data = await api("/api/auth/register", { method: "POST", body: JSON.stringify(payload) });
 
-        localStorage.setItem("token", data.token);
+        // persist authoritative auth state before navigating
+        if (data.token) localStorage.setItem("token", data.token);
         localStorage.setItem("userRegistered", "true");
-        localStorage.setItem("userName", data.user.name);
-        localStorage.setItem("userEmail", data.user.email);
+        localStorage.setItem("userName", data.user?.name || username);
+        if (data.user?.email) localStorage.setItem("userEmail", data.user.email);
 
         navigate("/dashboard", { replace: true });
       } catch (err) {
         console.error("Register error", err);
-        alert(err.message || "Could not register. Try again.");
+        alert(err?.message || "Could not register. Try again.");
       } finally {
         setSubmitting(false);
       }
@@ -81,15 +89,15 @@ export default function Login() {
 
       const data = await api("/api/auth/login", { method: "POST", body: JSON.stringify(payload) });
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userName", data.user.name);
-      if (data.user.email) localStorage.setItem("userEmail", data.user.email);
+      if (data.token) localStorage.setItem("token", data.token);
+      localStorage.setItem("userName", data.user?.name || username);
+      if (data.user?.email) localStorage.setItem("userEmail", data.user.email);
       localStorage.setItem("userRegistered", "true");
 
       navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error("Login error", err);
-      alert(err.message || "Login failed. Try again.");
+      alert(err?.message || "Login failed. Try again.");
     } finally {
       setSubmitting(false);
     }

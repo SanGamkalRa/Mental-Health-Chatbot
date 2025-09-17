@@ -1,10 +1,13 @@
 // src/Profile.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./css/Profile.css";
 
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:3001";
+
 export default function Profile() {
   const navigate = useNavigate();
+  const initRef = useRef(false);
 
   const [name, setName] = useState(localStorage.getItem("userName") || "");
   const [email, setEmail] = useState(localStorage.getItem("userEmail") || "");
@@ -13,10 +16,28 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem("isLoggedIn") !== "true") {
+    // run only once to avoid double runs in StrictMode
+    if (initRef.current) return;
+    initRef.current = true;
+
+    // Use the token as the authoritative login flag (what Login sets)
+    const token = localStorage.getItem("token");
+    if (!token) {
       navigate("/", { replace: true });
     }
   }, [navigate]);
+
+  // Small API helper that attaches Bearer token
+  const api = async (path, opts = {}) => {
+    const token = localStorage.getItem("token");
+    const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw data;
+    return data;
+  };
 
   const initials =
     (name || "")
@@ -27,18 +48,29 @@ export default function Profile() {
       .slice(0, 2)
       .toUpperCase() || "U";
 
-  const saveName = () => {
+  const saveName = async () => {
     if (!name.trim()) {
       alert("Name can't be empty.");
       return;
     }
     setSaving(true);
     try {
-      localStorage.setItem("userName", name.trim());
+      // call backend to update name
+      const body = { name: name.trim() };
+      const data = await api("/api/auth/update", { method: "PATCH", body: JSON.stringify(body) });
+
+      // update local storage with authoritative values
+      if (data.token) localStorage.setItem("token", data.token);
+      if (data.user?.name) localStorage.setItem("userName", data.user.name);
+      if (data.user?.email) localStorage.setItem("userEmail", data.user.email);
+      if (typeof data.user?.is_registered !== "undefined")
+        localStorage.setItem("userRegistered", data.user.is_registered ? "true" : "false");
+
+      setRegistered(localStorage.getItem("userRegistered") === "true");
       alert("Name saved.");
     } catch (err) {
-      console.error(err);
-      alert("Could not save name.");
+      console.error("Save name error:", err);
+      alert(err?.message || "Could not save name. Try again.");
     } finally {
       setSaving(false);
     }
@@ -50,29 +82,59 @@ export default function Profile() {
     setEditingEmail(false);
   };
 
-  const saveEmail = () => {
+  const saveEmail = async () => {
     if (!email.trim() || !email.includes("@")) {
       alert("Please enter a valid email.");
       return;
     }
     setSaving(true);
     try {
-      localStorage.setItem("userEmail", email.trim());
-      localStorage.setItem("userRegistered", "true");
-      setRegistered(true);
+      // call backend to update email
+      const body = { email: email.trim() };
+      const data = await api("/api/auth/update", { method: "PATCH", body: JSON.stringify(body) });
+
+      // update local storage with authoritative values
+      if (data.token) localStorage.setItem("token", data.token);
+      if (data.user?.name) localStorage.setItem("userName", data.user.name);
+      if (data.user?.email) localStorage.setItem("userEmail", data.user.email);
+      if (typeof data.user?.is_registered !== "undefined")
+        localStorage.setItem("userRegistered", data.user.is_registered ? "true" : "false");
+
+      setRegistered(localStorage.getItem("userRegistered") === "true");
       setEditingEmail(false);
       alert("Email saved.");
     } catch (err) {
-      console.error(err);
-      alert("Could not save email.");
+      console.error("Save email error:", err);
+      // conflict/email-in-use returns 409 with message
+      alert(err?.message || "Could not save email. Try again.");
     } finally {
       setSaving(false);
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("isLoggedIn");
-    navigate("/", { replace: true });
+  const logout = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        // call server logout (for audit). If it fails, still clear client state.
+        await fetch(`${API_BASE}/api/auth/logout`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch((e) => {
+          console.warn("Server logout failed (ignored):", e);
+        });
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      // clear all auth keys locally
+      localStorage.removeItem("token");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userRegistered");
+      localStorage.removeItem("isLoggedIn");
+      navigate("/", { replace: true });
+    }
   };
 
   const deleteAccount = () => {
@@ -80,9 +142,12 @@ export default function Profile() {
       "Delete local account? This removes local profile data (name, email). This cannot be undone."
     );
     if (!ok) return;
+    // NOTE: you don't currently have a server-side delete endpoint.
+    // We remove client state only. If you want a server-side delete, I can add it.
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userRegistered");
+    localStorage.removeItem("token");
     localStorage.removeItem("isLoggedIn");
     navigate("/", { replace: true });
   };
@@ -119,14 +184,11 @@ export default function Profile() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
             />
-            {/* Save name button moved here */}
-            
             <button className="btn primary" onClick={saveName} disabled={saving}>
               {saving ? "Saving..." : "Save name"}
             </button>
           </div>
 
-          {/* Mobile email area */}
           <div className="email-section-mobile">
             <label className="field-label">Email</label>
             {!registered && !editingEmail && (
@@ -146,7 +208,9 @@ export default function Profile() {
             {registered && !editingEmail && (
               <>
                 <p className="email-display">{email || "Not set"}</p>
-                <button className="btn small" onClick={startEditEmail}>Edit email</button>
+                <button className="btn small" onClick={startEditEmail}>
+                  Edit email
+                </button>
               </>
             )}
             {editingEmail && (
@@ -169,12 +233,17 @@ export default function Profile() {
             )}
           </div>
 
-          {/* Actions */}
           <div className="footer-actions">
-            <button className="btn danger" onClick={deleteAccount}>Delete account</button>
-            <button className="btn outline" onClick={logout}>Logout</button>
+            <button className="btn danger" onClick={deleteAccount}>
+              Delete account
+            </button>
+            <button className="btn outline" onClick={logout}>
+              Logout
+            </button>
             <div style={{ flex: 1 }} />
-          
+            <button className="btn" onClick={exportProfile}>
+              Export
+            </button>
           </div>
         </div>
 
@@ -185,8 +254,6 @@ export default function Profile() {
             <div className="preview-meta">
               <div className="preview-role">Mind Care</div>
               <div className="preview-name">{name || "User"}</div>
-         
-                
             </div>
           </div>
 
@@ -195,7 +262,9 @@ export default function Profile() {
             {registered && !editingEmail && (
               <>
                 <p className="email-display">{email || "Not set"}</p>
-                <button className="btn small" onClick={startEditEmail}>Edit email</button>
+                <button className="btn small" onClick={startEditEmail}>
+                  Edit email
+                </button>
               </>
             )}
             {!registered && !editingEmail && (
@@ -224,7 +293,9 @@ export default function Profile() {
                   <button className="btn small" onClick={saveEmail} disabled={saving}>
                     {saving ? "Saving..." : "Save"}
                   </button>
-                  <button className="btn muted" onClick={cancelEditEmail}>Cancel</button>
+                  <button className="btn muted" onClick={cancelEditEmail}>
+                    Cancel
+                  </button>
                 </div>
               </>
             )}
