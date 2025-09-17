@@ -19,16 +19,7 @@ export default function Layout() {
     }
   }, [navigate]);
 
-  const handleLogout = () => {
-    // clear all auth-related keys you use
-    localStorage.removeItem("token");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userRegistered");
-    // optional: if you were using isLoggedIn anywhere, remove it too
-    localStorage.removeItem("isLoggedIn");
-    navigate("/", { replace: true });
-  };
+
 
   return (
     <div className="layout">
