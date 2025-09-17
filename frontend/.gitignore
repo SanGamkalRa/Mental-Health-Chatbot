@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -12,7 +10,6 @@
 node_modules/
 bower_components/
 
-
 # Database & local data
 *.sqlite
 *.sqlite-journal
@@ -20,16 +17,22 @@ bower_components/
 *.db-journal
 *.sql
 
-# production
+# production build
 /build
 
-# misc
-.DS_Store
+# environment files
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
+# misc
+.DS_Store
+.vscode/
+.idea/
+
+# logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
