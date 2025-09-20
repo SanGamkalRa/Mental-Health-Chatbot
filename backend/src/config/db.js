@@ -23,10 +23,12 @@ const sequelize = new Sequelize(database, user, password, {
   logging: false
 });
 
-// models
+// models (adjust filenames if your models live elsewhere)
 const User = require('../models/user.model')(sequelize, DataTypes);
 const Message = require('../models/message.model')(sequelize, DataTypes);
 const Mood = require('../models/mood.model')(sequelize, DataTypes);
+// Fix: import wellness tip model (ensure file is src/models/wellnessTip.model.js)
+const WellnessTip = require('../models/wellnessTip.model')(sequelize, DataTypes);
 
 // relations
 User.hasMany(Message, { foreignKey: 'userId' });
@@ -35,21 +37,25 @@ Message.belongsTo(User, { foreignKey: 'userId' });
 User.hasMany(Mood, { foreignKey: 'userId' });
 Mood.belongsTo(User, { foreignKey: 'userId' });
 
+// (No direct user relation needed for WellnessTip — tips are global)
 module.exports = {
   sequelize,
   Sequelize,
   User,
   Message,
   Mood,
-  init: async () => {
+  WellnessTip,
+  init: async (opts = { alter: true }) => {
     try {
       await sequelize.authenticate();
       console.log('MySQL connected.');
-      await sequelize.sync({ alter: true }); // for dev; change to { force: false } in prod
+      // for dev use { alter: true } (safe-ish). Change in production.
+      await sequelize.sync({ alter: !!opts.alter });
       console.log('Models synchronized.');
     } catch (err) {
       console.error('DB init error:', err);
-      process.exit(1);
+      // rethrow so callers (seed script) can handle the error
+      throw err;
     }
   }
 };

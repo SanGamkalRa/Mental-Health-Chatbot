@@ -1,100 +1,245 @@
+/* include the full CSS I gave before; key parts below:
+   - .mt-first-chart and .mt-chart produce the full-width chart area
+   - .mt-body grid places tracker left and list right
+*/
+
+:root {
+  --bg: #f8f9fd;
+  --card: #ffffff;
+  --accent: #764ba2;
+  --muted: #6b7280;
+  --surface-shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
+  --radius: 14px;
+  --gap: 18px;
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial;
+  --font-display: Poppins, var(--font-sans);
+  --chart-height: 320px;
+}
 .mood-container {
+  padding: 28px 36px;
+  background: var(--bg);
+}
+.mood-tracker-card {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  font-family: 'Inter', sans-serif;
-  background: #f8f9fd;
-  padding: 20px;
+  gap: var(--gap);
 }
-
-/* Header */
-.mood-header {
+.mt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mt-first-chart {
+  width: 100%;
+}
+.mt-chart {
+  background: var(--card);
+  padding: 16px;
+  border-radius: var(--radius);
+  box-shadow: var(--surface-shadow);
+  min-height: 260px;
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
-  position: relative;
+  justify-content: center;
+}
+.mt-body {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+/* ...rest of CSS from previous message (mt-left, mt-right, mt-options, mt-list...) ... */
+
+/* left card */
+.mt-left {
+  background: var(--card);
+  padding: 18px;
+  border-radius: var(--radius);
+  box-shadow: var(--surface-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 300px;
 }
 
-.mood-header h2 {
-  flex: 1;
+/* right column list */
+.mt-right {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.mt-list {
+  background: var(--card);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  box-shadow: var(--surface-shadow);
+  overflow: auto;
+  max-height: 300px;
+}
+
+/* prompt area */
+.mt-prompt p {
+  margin: 0;
+  font-weight: 700;
+  color: #0f172a;
+}
+.mt-today {
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 13px;
+  margin-left: 6px;
+}
+
+/* mood options */
+.mt-options {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.mt-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 86px;
+  height: 86px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 24, 40, 0.04);
+  background: #ffffff;
+  cursor: pointer;
+  padding: 8px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  font-size: 14px;
+}
+.mt-option:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.06);
+}
+.mt-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.mt-option.selected {
+  background: linear-gradient(180deg, #f3e8ff, #eef2ff);
+  border-color: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.08);
+}
+.mt-emoji {
+  font-size: 30px;
+  line-height: 1;
+}
+.mt-label {
+  font-size: 12px;
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+/* note area */
+.mt-note {
+  margin-top: 4px;
+  width: 100%;
+  resize: none;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid #e6e9ee;
+  font-size: 14px;
+  min-height: 72px;
+  outline: none;
+}
+
+/* actions */
+.mt-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid #e6e9ee;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* list rows */
+.mt-list h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #0f172a;
+  font-weight: 600;
+}
+.mt-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mt-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 8px;
+}
+.mt-row:hover {
+  background: rgba(99, 102, 241, 0.03);
+}
+.mt-row-date {
+  min-width: 140px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.mt-row-mood {
+  width: 56px;
   text-align: center;
-  font-family: 'Poppins', sans-serif;
   font-size: 22px;
 }
-
-.back-btn {
-  background: transparent;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: #764ba2;
-  position: absolute;
-  left: 0;
+.mt-row-note {
+  flex: 1;
+  font-size: 13px;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Mood select */
-.mood-select {
-  text-align: center;
-  margin-bottom: 30px;
+/* messages */
+.mt-error {
+  color: #b91c1c;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.mt-note-saved {
+  color: #065f46;
+  font-size: 13px;
+  margin-top: 8px;
 }
 
-.mood-options {
-  font-size: 40px;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin: 15px 0;
-  cursor: pointer;
-}
-
-.mood-options span {
-  transition: transform 0.2s;
-}
-
-.mood-options span:hover {
-  transform: scale(1.3);
-}
-
-.today {
-  font-size: 14px;
-  color: #333;
-}
-
-/* Mood content grid */
-.mood-content {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 30px;
-}
-
-/* Table */
-.mood-table-container {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-.mood-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.mood-table th, .mood-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  text-align: left;
-}
-
-.mood-table th {
-  background: #f0f0f5;
-  font-weight: bold;
-}
-
-/* Chart */
-.mood-chart {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+/* responsive */
+@media (max-width: 1100px) {
+  .mt-body {
+    grid-template-columns: 1fr;
+  }
+  .mt-chart {
+    min-height: 240px;
+  }
+  .mt-list {
+    max-height: 220px;
+  }
 }

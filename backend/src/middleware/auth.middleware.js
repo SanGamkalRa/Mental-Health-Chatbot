@@ -1,7 +1,8 @@
 // src/middleware/auth.middleware.js
 const jwt = require('jsonwebtoken');
 const { User } = require('../config/db');
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 
 async function requireAuth(req, res, next) {
   try {
@@ -10,7 +11,6 @@ async function requireAuth(req, res, next) {
     if (!token) return res.status(401).json({ message: 'Missing auth token' });
 
     const payload = jwt.verify(token, JWT_SECRET);
-    // optionally check user still exists
     const user = await User.findByPk(payload.id);
     if (!user) return res.status(401).json({ message: 'User not found' });
 
