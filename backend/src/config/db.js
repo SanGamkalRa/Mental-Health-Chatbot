@@ -23,21 +23,38 @@ const sequelize = new Sequelize(database, user, password, {
   logging: false
 });
 
-// models (adjust filenames if your models live elsewhere)
+// load models (ensure filenames below match your src/models/ files)
 const User = require('../models/user.model')(sequelize, DataTypes);
 const Message = require('../models/message.model')(sequelize, DataTypes);
 const Mood = require('../models/mood.model')(sequelize, DataTypes);
-// Fix: import wellness tip model (ensure file is src/models/wellnessTip.model.js)
 const WellnessTip = require('../models/wellnessTip.model')(sequelize, DataTypes);
 
-// relations
-User.hasMany(Message, { foreignKey: 'userId' });
-Message.belongsTo(User, { foreignKey: 'userId' });
+// New: Conversation model
+// Create src/models/conversation.model.js as described previously if not already present
+const Conversation = require('../models/conversation.model')(sequelize, DataTypes);
 
-User.hasMany(Mood, { foreignKey: 'userId' });
-Mood.belongsTo(User, { foreignKey: 'userId' });
+// === Associations ===
+// NOTE: models use underscored: true, so DB columns are `user_id`, `conversation_id`, etc.
+// Use underscored foreignKey names to match model definitions and avoid Sequelize creating extra fields.
 
-// (No direct user relation needed for WellnessTip — tips are global)
+// User <-> Message
+User.hasMany(Message, { foreignKey: 'user_id', as: 'messages' });
+Message.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+// Conversation <-> Message
+Conversation.hasMany(Message, { foreignKey: 'conversation_id', as: 'messages', onDelete: 'CASCADE' });
+Message.belongsTo(Conversation, { foreignKey: 'conversation_id', as: 'conversation' });
+
+// Conversation <-> User (optional owner)
+Conversation.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Conversation, { foreignKey: 'user_id', as: 'conversations' });
+
+// User <-> Mood
+User.hasMany(Mood, { foreignKey: 'user_id', as: 'moods' });
+Mood.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+// WellnessTip is global/static; no user relations required (but you can add if needed)
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -45,16 +62,25 @@ module.exports = {
   Message,
   Mood,
   WellnessTip,
+  Conversation,
+  /**
+   * Initialize DB (auth + sync). By default uses alter: true for dev.
+   * In production prefer migrations and set opts.alter = false
+   */
   init: async (opts = { alter: true }) => {
     try {
       await sequelize.authenticate();
       console.log('MySQL connected.');
-      // for dev use { alter: true } (safe-ish). Change in production.
-      await sequelize.sync({ alter: !!opts.alter });
+
+      // use alter only in dev; override by calling init({ alter:false }) or run migrations in production
+      const syncOpts = {};
+      if (opts.alter) syncOpts.alter = true;
+      if (opts.force) syncOpts.force = true;
+
+      await sequelize.sync(syncOpts);
       console.log('Models synchronized.');
     } catch (err) {
       console.error('DB init error:', err);
-      // rethrow so callers (seed script) can handle the error
       throw err;
     }
   }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import "./css/Dashboard.css";
 import {
   LineChart,
@@ -12,69 +12,175 @@ import { useNavigate } from "react-router-dom";
 
 const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:3001";
 
+// small textual->numeric map (keeps parity with your MoodTracker)
+const MOOD_MAP = {
+  terrible: 1,
+  sad: 2,
+  bad: 2,
+  okay: 3,
+  ok: 3,
+  neutral: 3,
+  good: 4,
+  happy: 4,
+  great: 5,
+  excellent: 5,
+};
+
+function toYYYYMMDD(d) {
+  return d.toISOString().slice(0, 10);
+}
+
+// convert backend mood (number or text) to numeric value or null
+function moodToNumber(m) {
+  if (m == null) return null;
+  if (typeof m === "number" && Number.isFinite(m)) return m;
+  const s = String(m).trim();
+  if (s === "") return null;
+  const num = Number(s);
+  if (Number.isFinite(num)) return num;
+  const mapped = MOOD_MAP[s.toLowerCase()];
+  return Number.isFinite(mapped) ? mapped : null;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const username = localStorage.getItem("userName") || "User";
   const token = localStorage.getItem("token");
+  console.log("token:", token);
 
   const [dailyTips, setDailyTips] = useState([]);
   const [tipsLoading, setTipsLoading] = useState(false);
   const [tipsError, setTipsError] = useState(null);
 
-  
+  // ---- new: mood chart state ----
+  const [chartData, setChartData] = useState([]); // array of { dateLabel, mood }
+  const [chartLoading, setChartLoading] = useState(false);
+  const [chartError, setChartError] = useState(null);
 
-// inside Dashboard component file (replace the useEffect part)
-
-function getTodayUTCDateString() {
-  const now = new Date();
-  const yyyy = now.getUTCFullYear();
-  const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(now.getUTCDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-useEffect(() => {
-  let mounted = true;
-  async function fetchTips(dateStr = getTodayUTCDateString()) {
-    setTipsLoading(true);
-    setTipsError(null);
-    try {
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await fetch(`${API_BASE}/api/wellness/daily?date=${encodeURIComponent(dateStr)}&n=5`, {
-        headers: { 'Content-Type': 'application/json', ...headers }
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || 'Failed to fetch tips');
-      }
-      const json = await res.json();
-      if (mounted) setDailyTips(json.tips || []);
-    } catch (err) {
-      console.error('fetch tips error', err);
-      if (mounted) setTipsError(err.message || 'Error fetching tips');
-    } finally {
-      if (mounted) setTipsLoading(false);
-    }
+  // fetch wellness tips (your existing logic, unchanged)
+  function getTodayUTCDateString() {
+    const now = new Date();
+    const yyyy = now.getUTCFullYear();
+    const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(now.getUTCDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
   }
 
-  // initial fetch uses today's UTC date
-  fetchTips();
+  useEffect(() => {
+    let mounted = true;
+    async function fetchTips(dateStr = getTodayUTCDateString()) {
+      setTipsLoading(true);
+      setTipsError(null);
+      try {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await fetch(
+          `${API_BASE}/api/wellness/daily?date=${encodeURIComponent(
+            dateStr
+          )}&n=5`,
+          {
+            headers: { "Content-Type": "application/json", ...headers },
+          }
+        );
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.message || "Failed to fetch tips");
+        }
+        const json = await res.json();
+        if (mounted) setDailyTips(json.tips || []);
+      } catch (err) {
+        console.error("fetch tips error", err);
+        if (mounted) setTipsError(err.message || "Error fetching tips");
+      } finally {
+        if (mounted) setTipsLoading(false);
+      }
+    }
+    fetchTips();
+    window.refetchWellnessTips = (dateStr) => fetchTips(dateStr);
+    return () => {
+      mounted = false;
+    };
+  }, [token]);
 
-  // expose a simple refetch utility (optional). You can call refetchTips() from other hooks or events.
-  window.refetchWellnessTips = (dateStr) => fetchTips(dateStr);
+  // ---- new: fetch moods for the chart ----
+  useEffect(() => {
+    let mounted = true;
+    async function fetchMoodsForChart() {
+      setChartLoading(true);
+      setChartError(null);
+      try {
+        // We'll request the current month (server already supports year/month).
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const qs = `year=${year}&month=${month}`;
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers.Authorization = `Bearer ${token}`;
+        if (username) headers["x-username"] = username;
 
-  return () => { mounted = false; };
-}, [token]); // unchanged
+        const res = await fetch(`${API_BASE}/api/mood?${qs}`, { headers });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.message || "Failed to load moods for chart");
+        }
+        const json = await res.json();
+        // normalize incoming payload shape flexibly
+        const raw = Array.isArray(json) ? json : json.moods || json;
 
+        // map by date string (YYYY-MM-DD) using common date fields
+        const byDate = new Map();
+        (Array.isArray(raw) ? raw : []).forEach((entry) => {
+          if (!entry) return;
+          const dateStr =
+            entry.date || entry.dateISO || entry.createdAt || entry.created_at;
+          const parsed = dateStr ? new Date(dateStr) : null;
+          if (parsed && !isNaN(parsed.getTime())) {
+            const key = toYYYYMMDD(parsed);
+            // compute numeric value if possible
+            const numeric = moodToNumber(entry.mood);
+            byDate.set(key, { raw: entry, numeric, note: entry.note || "" });
+          }
+        });
 
-  // Example mood tracking data (keep as you had)
-  const data = [
-    { date: "Apr 12", mood: 1 },
-    { date: "Apr 13", mood: 2 },
-    { date: "Apr 14", mood: 3 },
-    { date: "Apr 15", mood: 2 },
-    { date: "Apr 16", mood: 3 },
-  ];
+        // build last 7 calendar days (including today)
+        const out = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const iso = toYYYYMMDD(d);
+          const label = d.toLocaleString(undefined, {
+            month: "short",
+            day: "numeric",
+          }); // e.g. "Apr 16"
+          const hit = byDate.get(iso);
+          out.push({
+            dateISO: iso,
+            dateLabel: label,
+            mood: hit ? hit.numeric : null, // null will break the line (no numeric entry)
+          });
+        }
+
+        if (mounted) setChartData(out);
+      } catch (err) {
+        console.error("fetch chart moods error", err);
+        if (mounted) setChartError(err.message || "Failed to load mood chart");
+      } finally {
+        if (mounted) setChartLoading(false);
+      }
+    }
+
+    fetchMoodsForChart();
+
+    // expose a simple refetch function for debugging / dev
+    window.refetchDashboardMoods = fetchMoodsForChart;
+
+    return () => {
+      mounted = false;
+    };
+  }, [token, username]);
+
+  // keep the rest of your dashboard UI but swap the static chart for chartData
+  // (chartData: array of { dateLabel, mood })
+  // Example fallback message when there is no numeric data in the last 7 days.
 
   return (
     <div>
@@ -102,20 +208,30 @@ useEffect(() => {
       <section className="dashboard-grid">
         <div className="mood-tracking">
           <h2>Mood Tracking</h2>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={data}>
-              <XAxis dataKey="date" />
-              <YAxis domain={[0, 3]} ticks={[1, 2, 3]} />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="mood"
-                stroke="#764ba2"
-                strokeWidth={3}
-                dot={{ r: 5 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+
+          {chartLoading ? (
+            <div style={{ padding: 24 }}>Loading chart…</div>
+          ) : chartError ? (
+            <div style={{ color: "var(--danger)", padding: 24 }}>
+              {chartError}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={chartData}>
+                <XAxis dataKey="dateLabel" />
+                <YAxis domain={[0, 5]} ticks={[1, 2, 3, 4, 5]} />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="mood"
+                  stroke="#764ba2"
+                  strokeWidth={3}
+                  dot={{ r: 5 }}
+                  connectNulls={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         <div className="wellness-tips">

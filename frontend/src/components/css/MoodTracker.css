@@ -1,56 +1,121 @@
-/* include the full CSS I gave before; key parts below:
-   - .mt-first-chart and .mt-chart produce the full-width chart area
-   - .mt-body grid places tracker left and list right
-*/
-
 :root {
-  --bg: #f8f9fd;
+  --bg: #f6f8fb;
   --card: #ffffff;
   --accent: #764ba2;
+  --accent-600: #5b2f9f;
   --muted: #6b7280;
+  --muted-contrast: #4b5563; /* slightly darker for accessibility */
   --surface-shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
   --radius: 14px;
   --gap: 18px;
-  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial;
-  --font-display: Poppins, var(--font-sans);
-  --chart-height: 320px;
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
+
+/* Reset / base */
+* { box-sizing: border-box; }
+body, .mood-container { font-family: var(--font-sans); color: #0f172a; margin: 0; padding: 0; }
+
 .mood-container {
-  padding: 28px 36px;
+  padding: 24px 32px;
   background: var(--bg);
+  min-height: 100%;
 }
+
+/* card */
 .mood-tracker-card {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--gap);
 }
+
+/* header */
 .mt-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
 }
-.mt-first-chart {
-  width: 100%;
+
+.mt-title h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.2px;
 }
-.mt-chart {
-  background: var(--card);
-  padding: 16px;
-  border-radius: var(--radius);
-  box-shadow: var(--surface-shadow);
-  min-height: 260px;
+
+.mt-subtitle {
+  margin-top: 6px;
+  color: var(--muted-contrast);
+  font-size: 13px;
+}
+
+/* kept for backwards compatibility; hide if not used */
+.mt-avg-pill {
+  display: inline-block;
+  background: linear-gradient(90deg,#f3e8ff,#eef2ff);
+  color: var(--accent-600);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  margin-left: 8px;
+  font-size: 13px;
+}
+
+/* month controls */
+.mt-controls {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.nav-btn {
+  background: var(--card);
+  border: 1px solid #e6e9ee;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: transform .12s ease, box-shadow .12s ease;
+  box-shadow: 0 6px 18px rgba(16,24,40,0.04);
+}
+.nav-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 22px rgba(118,75,162,0.06); }
+.nav-btn:active { transform: translateY(0); }
+
+.month-pill {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(118,75,162,0.06), rgba(118,75,162,0.03));
+  color: #111827;
+  font-weight: 600;
+  min-width: 180px;
+  text-align: center;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.02);
+}
+
+/* chart area */
+.mt-first-chart { width: 100%; }
+.mt-chart {
+  background: var(--card);
+  padding: 14px;
+  border-radius: var(--radius);
+  box-shadow: var(--surface-shadow);
+  min-height: 300px;
+  display: flex;
+  align-items: stretch;
   justify-content: center;
 }
+
+/* body grid */
 .mt-body {
   display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1.6fr 0.95fr;
+  gap: 20px;
   align-items: start;
 }
-/* ...rest of CSS from previous message (mt-left, mt-right, mt-options, mt-list...) ... */
 
 /* left card */
 .mt-left {
@@ -68,15 +133,18 @@
 .mt-right {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
 }
 .mt-list {
   background: var(--card);
-  padding: 10px 14px;
+  padding: 12px;
   border-radius: var(--radius);
   box-shadow: var(--surface-shadow);
   overflow: auto;
-  max-height: 300px;
+  max-height: 320px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(118,75,162,0.12) transparent;
 }
 
 /* prompt area */
@@ -84,53 +152,64 @@
   margin: 0;
   font-weight: 700;
   color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .mt-today {
   font-weight: 500;
-  color: var(--muted);
+  color: var(--muted-contrast);
   font-size: 13px;
-  margin-left: 6px;
 }
 
 /* mood options */
 .mt-options {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 .mt-option {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 86px;
-  height: 86px;
+  width: 82px;
+  height: 82px;
   border-radius: 12px;
-  border: 1px solid rgba(16, 24, 40, 0.04);
-  background: #ffffff;
+  border: 1px solid rgba(16, 24, 40, 0.06);
+  background: linear-gradient(180deg,#ffffff,#fbfbfd);
   cursor: pointer;
   padding: 8px;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color .12s ease;
   font-size: 14px;
+  outline: none;
+  box-shadow: 0 6px 14px rgba(16,24,40,0.03);
 }
 .mt-option:hover {
   transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.06);
+  box-shadow: 0 20px 40px rgba(118,75,162,0.06);
 }
 .mt-option:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+  transform: none !important;
+  box-shadow: none !important;
+  pointer-events: none;
 }
 .mt-option.selected {
-  background: linear-gradient(180deg, #f3e8ff, #eef2ff);
-  border-color: rgba(99, 102, 241, 0.18);
-  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.08);
+  background: linear-gradient(180deg,#f3e8ff,#eef2ff);
+  border: 1px solid rgba(118,75,162,0.22);
+  box-shadow: 0 18px 40px rgba(118,75,162,0.08);
+  transform: translateY(-4px);
+}
+.mt-option:focus-visible {
+  outline: 3px solid rgba(118,75,162,0.16);
+  outline-offset: 3px;
+  box-shadow: 0 10px 30px rgba(118,75,162,0.12);
 }
 .mt-emoji {
-  font-size: 30px;
+  font-size: 28px;
   line-height: 1;
 }
 .mt-label {
@@ -141,7 +220,7 @@
 
 /* note area */
 .mt-note {
-  margin-top: 4px;
+  margin-top: 10px;
   width: 100%;
   resize: none;
   border-radius: 12px;
@@ -150,6 +229,7 @@
   font-size: 14px;
   min-height: 72px;
   outline: none;
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.01);
 }
 
 /* actions */
@@ -157,6 +237,7 @@
   display: flex;
   gap: 12px;
   align-items: center;
+  margin-top: 8px;
 }
 .btn-primary {
   background: var(--accent);
@@ -166,7 +247,9 @@
   border-radius: 12px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 8px 22px rgba(118,75,162,0.14);
 }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
 .btn-ghost {
   background: transparent;
   border: 1px solid #e6e9ee;
@@ -177,10 +260,14 @@
 
 /* list rows */
 .mt-list h4 {
-  margin: 0 0 8px 0;
-  font-size: 14px;
+  margin: 0 0 10px 0;
+  font-size: 15px;
   color: #0f172a;
-  font-weight: 600;
+  font-weight: 700;
+  position: sticky;
+  top: 8px;
+  background: transparent;
+  z-index: 2;
 }
 .mt-list ul {
   list-style: none;
@@ -194,21 +281,23 @@
   display: flex;
   gap: 12px;
   align-items: center;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  transition: background .12s ease, transform .08s ease;
 }
 .mt-row:hover {
-  background: rgba(99, 102, 241, 0.03);
+  background: rgba(118,75,162,0.04);
+  transform: translateY(-2px);
 }
 .mt-row-date {
-  min-width: 140px;
+  min-width: 120px;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--muted-contrast);
 }
 .mt-row-mood {
-  width: 56px;
+  width: 48px;
   text-align: center;
-  font-size: 22px;
+  font-size: 20px;
 }
 .mt-row-note {
   flex: 1;
@@ -218,6 +307,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.mt-note-muted { color: #9ca3af; font-style: italic; }
 
 /* messages */
 .mt-error {
@@ -231,15 +321,55 @@
   margin-top: 8px;
 }
 
+/* loading */
+.mt-loading { color: var(--muted); padding: 12px 6px; }
+
 /* responsive */
 @media (max-width: 1100px) {
   .mt-body {
     grid-template-columns: 1fr;
   }
-  .mt-chart {
-    min-height: 240px;
-  }
-  .mt-list {
-    max-height: 220px;
+  .mt-chart { min-height: 240px; }
+  .mt-list { max-height: 240px; }
+  .month-pill { min-width: 150px; font-size: 14px; padding: 8px 12px; }
+  .mt-options { gap: 8px; }
+}
+@media (max-width: 800px) {
+  .month-pill { min-width: 140px; padding: 8px 12px; }
+}
+@media (max-width: 640px) {
+  .mood-container { padding: 18px; }
+  .mt-option { width: 72px; height: 72px; }
+  .mt-row-date { min-width: 110px; }
+  .mt-row-note { display: none; } /* simplify for tiny screens */
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .mt-option, .nav-btn, .mt-row:hover {
+    transition: none !important;
+    transform: none !important;
   }
 }
+
+/* Scrollbar styling (non-intrusive) */
+.mt-list::-webkit-scrollbar { height: 8px; width: 8px; }
+.mt-list::-webkit-scrollbar-thumb {
+  background: rgba(118,75,162,0.12);
+  border-radius: 8px;
+}
+.mt-list::-webkit-scrollbar-track { background: transparent; }
+
+/* Make row note wrap on wider screens (two-line clamp) */
+@media (min-width: 900px) {
+  .mt-row-note {
+    white-space: normal;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
+/* Hint cursor when row has a title (tooltip) */
+.mt-row[title] { cursor: help; }
