@@ -66,40 +66,76 @@ export default function Dashboard() {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  useEffect(() => {
-    let mounted = true;
-    async function fetchTips(dateStr = getTodayUTCDateString()) {
-      setTipsLoading(true);
-      setTipsError(null);
-      try {
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await fetch(
-          `${API_BASE}/api/wellness/daily?date=${encodeURIComponent(
-            dateStr
-          )}&n=5`,
-          {
-            headers: { "Content-Type": "application/json", ...headers },
-          }
-        );
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.message || "Failed to fetch tips");
+useEffect(() => {
+  let mounted = true;
+
+  async function fetchTips(dateStr = getTodayUTCDateString()) {
+    setTipsLoading(true);
+    setTipsError(null);
+
+    try {
+      const token = getAuthToken();
+      const headers = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      // use API_ROOT if non-empty, otherwise rely on relative path ("/api/...")
+      const base = API_ROOT ? API_ROOT : "";
+      const url = `${base}/api/wellness/daily?date=${encodeURIComponent(
+        dateStr
+      )}&n=5`;
+
+      const res = await fetch(url, { headers });
+
+      // Helpful diagnostics — log status & body when not OK
+      if (!res.ok) {
+        // try to parse json body for server message
+        let bodyText;
+        try {
+          bodyText = await res.json();
+        } catch (e) {
+          bodyText = await res.text().catch(() => "(no body)");
         }
-        const json = await res.json();
-        if (mounted) setDailyTips(json.tips || []);
-      } catch (err) {
-        console.error("fetch tips error", err);
-        if (mounted) setTipsError(err.message || "Error fetching tips");
-      } finally {
-        if (mounted) setTipsLoading(false);
+        const msg =
+          bodyText && bodyText.message
+            ? bodyText.message
+            : JSON.stringify(bodyText);
+        console.warn("fetchTips failed:", res.status, msg, url);
+        throw new Error(msg || `HTTP ${res.status}`);
       }
+
+      const json = await res.json();
+      if (!mounted) return;
+
+      // handle flexible payloads: { tips: [...] } or array
+      const tipsArray = Array.isArray(json) ? json : json.tips || [];
+      setDailyTips(tipsArray);
+    } catch (err) {
+      console.error("fetch tips error", err);
+      if (mounted) {
+        // display friendly error but keep console logs for debugging
+        setTipsError(
+          err.message?.toString() ||
+            "Unable to fetch wellness tips. Check console for details."
+        );
+      }
+    } finally {
+      if (mounted) setTipsLoading(false);
     }
-    fetchTips();
-    window.refetchWellnessTips = (dateStr) => fetchTips(dateStr);
-    return () => {
-      mounted = false;
-    };
-  }, [token]);
+  }
+
+  // initial fetch
+  fetchTips();
+  // expose for dev debugging
+  window.refetchWellnessTips = (dateStr) => fetchTips(dateStr);
+
+  return () => {
+    mounted = false;
+  };
+}, []); // token removed from deps because we read token inside effect via getAuthToken()
+
 
   // ---- new: fetch moods for the chart ----
   useEffect(() => {

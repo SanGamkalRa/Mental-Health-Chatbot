@@ -436,49 +436,73 @@ export default function Chatbot() {
   }
 
   // handle send from UI
-  function handleSend(e) {
-    e && e.preventDefault();
-    const text = input.trim();
-    if (!text || !activeId) return;
-    setInput("");
-    inputRef.current?.focus();
+ // handle send from UI (replace existing handleSend)
+async function handleSend(e) {
+  e && e.preventDefault();
+  const text = input.trim();
+  if (!text || !activeId) return;
 
-    // if we have an API-backed conv id, call API; else create conv then send
-    const conv = conversations.find((c) => c.id === activeId);
+  // clear input and keep focus
+  setInput("");
+  inputRef.current?.focus();
 
-    // If conversation is temporary local only (no numeric id), attempt to create server conv first
-    if (activeId && String(activeId).startsWith("c-")) {
-      // try to create a server conversation (if not already created) in background
-      (async () => {
-        // if the conversation already exists on server we will get replaced; createConversation handles replacement
-        await createConversation(conv?.title || "Conversation");
-        // find new active id (createConversation sets it)
-        const realId = activeId; // createConversation sets active id internally
-        await addMessageApi(realId, "user", text);
-      })();
-      // while we do that, show optimistic message (addMessageApi will be called by the async block)
-      // but to keep UI responsive we'll append now
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === activeId
-            ? {
-                ...c,
-                messages: [
-                  ...c.messages,
-                  { sender: "user", text, createdAt: new Date().toISOString() },
-                ],
-                updatedAt: new Date().toISOString(),
-              }
-            : c
-        )
-      );
-      setIsBotTyping(true);
-      return;
+  const createdAt = new Date().toISOString();
+  const userMsg = { sender: "user", text, createdAt };
+
+  // Optimistically append the user's message to the active conversation
+  setConversations((prev) =>
+    prev.map((c) =>
+      c.id === activeId
+        ? {
+            ...c,
+            messages: [...c.messages, userMsg],
+            updatedAt: new Date().toISOString(),
+          }
+        : c
+    )
+  );
+
+  // Indicate bot is typing until we get a reply (or fallback finishes)
+  setIsBotTyping(true);
+
+  // If this conversation is a temporary client-side id (starts with "c-"),
+  // create it on the server first and use the returned id to post the message.
+  if (String(activeId).startsWith("c-")) {
+    try {
+      // Find local conversation data (may be undefined but fine)
+      const localConv = conversations.find((c) => c.id === activeId);
+
+      // createConversation returns the new id (server id or the same temp id on failure)
+      const createdId = await createConversation(localConv?.title || "Conversation");
+
+      // Use the returned id to post the message to the correct conversation on server
+      await addMessageApi(createdId, "user", text);
+    } catch (err) {
+      // Best-effort fallback: if creation or send fails, try sending against the temp id
+      console.warn("Failed to create conversation or send message:", err);
+      try {
+        await addMessageApi(activeId, "user", text);
+      } catch (e) {
+        console.warn("Fallback send also failed:", e);
+      }
+    } finally {
+      setIsBotTyping(false);
     }
-
-    // Normal flow: add message to existing conversation id
-    addMessageApi(activeId, "user", text);
+    return;
   }
+
+  // Normal flow: existing (server) conversation id
+  try {
+    await addMessageApi(activeId, "user", text);
+  } catch (err) {
+    // addMessageApi already handles local fallback, but log for debugging
+    console.warn("addMessageApi failed:", err);
+  } finally {
+    // ensure typing indicator is cleared (addMessageApi also clears it on success/fallback)
+    setIsBotTyping(false);
+  }
+}
+
 
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) handleSend(e);
