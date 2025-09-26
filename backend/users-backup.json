@@ -1,0 +1,549 @@
+{
+    "Items": [
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:39:59.235Z"
+            },
+            "id": {
+                "S": "u-1758879599235-ox"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:44:36.677Z"
+            },
+            "id": {
+                "S": "u-1758879876677-16"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "username_normalized": {
+                "S": "sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:47:27.080Z"
+            },
+            "id": {
+                "S": "u-1758880047080-yy"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:44:22.003Z"
+            },
+            "id": {
+                "S": "u-1758879862003-ga"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:41:41.700Z"
+            },
+            "id": {
+                "S": "u-1758879701700-q4"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:40:02.389Z"
+            },
+            "id": {
+                "S": "u-1758879602389-me"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:42:11.253Z"
+            },
+            "id": {
+                "S": "u-1758879731253-ny"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:40:02.435Z"
+            },
+            "id": {
+                "S": "u-1758879602435-iw"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:40:08.707Z"
+            },
+            "id": {
+                "S": "u-1758879608707-ts"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:42:01.626Z"
+            },
+            "id": {
+                "S": "u-1758879721626-5s"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:39:47.313Z"
+            },
+            "id": {
+                "S": "u-1758879587313-l5"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "username_normalized": {
+                "S": "sangam"
+            },
+            "last_login_at": {
+                "N": "1758877150938"
+            },
+            "is_registered": {
+                "BOOL": true
+            },
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "N": "1758877150938"
+            },
+            "id": {
+                "S": "30376c6c-a85e-447c-856c-8fc687c88860"
+            },
+            "email": {
+                "S": "sangamkalra44@gmail.com"
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:42:11.300Z"
+            },
+            "id": {
+                "S": "u-1758879731300-0s"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:44:22.052Z"
+            },
+            "id": {
+                "S": "u-1758879862052-lk"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:39:47.274Z"
+            },
+            "id": {
+                "S": "u-1758879587274-th"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:44:29.611Z"
+            },
+            "id": {
+                "S": "u-1758879869611-jo"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:39:41.650Z"
+            },
+            "id": {
+                "S": "u-1758879581650-p3"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:40:48.198Z"
+            },
+            "id": {
+                "S": "u-1758879648198-x7"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:44:29.554Z"
+            },
+            "id": {
+                "S": "u-1758879869554-84"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "username_normalized": {
+                "S": "sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:47:23.307Z"
+            },
+            "id": {
+                "S": "u-1758880043307-gv"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:40:39.631Z"
+            },
+            "id": {
+                "S": "u-1758879639631-md"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:44:42.098Z"
+            },
+            "id": {
+                "S": "u-1758879882098-jm"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:40:05.706Z"
+            },
+            "id": {
+                "S": "u-1758879605705-pm"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:40:08.743Z"
+            },
+            "id": {
+                "S": "u-1758879608743-1b"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:39:30.223Z"
+            },
+            "id": {
+                "S": "u-1758879570223-xa"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:44:26.678Z"
+            },
+            "id": {
+                "S": "u-1758879866678-h2"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:40:05.748Z"
+            },
+            "id": {
+                "S": "u-1758879605748-ec"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:44:24.151Z"
+            },
+            "id": {
+                "S": "u-1758879864151-7w"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "username_normalized": {
+                "S": "sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:47:57.812Z"
+            },
+            "id": {
+                "S": "u-1758880077812-1h"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:39:41.595Z"
+            },
+            "id": {
+                "S": "u-1758879581595-uk"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        },
+        {
+            "name": {
+                "S": "Sangam"
+            },
+            "created_at": {
+                "S": "2025-09-26T09:44:24.202Z"
+            },
+            "id": {
+                "S": "u-1758879864202-ok"
+            },
+            "is_registered": {
+                "BOOL": false
+            },
+            "email": {
+                "NULL": true
+            }
+        }
+    ],
+    "Count": 31,
+    "ScannedCount": 31,
+    "ConsumedCapacity": null
+}

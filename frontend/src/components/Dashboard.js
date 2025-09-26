@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import "./css/Dashboard.css";
 import {
   LineChart,
@@ -45,19 +45,25 @@ function moodToNumber(m) {
 export default function Dashboard() {
   const navigate = useNavigate();
   const username = localStorage.getItem("userName") || "User";
+  // NOTE: keep token read lazily inside effects where needed (but reading once here for quick debug/log)
   const token = localStorage.getItem("token");
-  console.log("token:", token);
+  console.log("Dashboard token (debug):", token);
 
   const [dailyTips, setDailyTips] = useState([]);
   const [tipsLoading, setTipsLoading] = useState(false);
   const [tipsError, setTipsError] = useState(null);
 
-  // ---- new: mood chart state ----
+  // ---- mood chart state ----
   const [chartData, setChartData] = useState([]); // array of { dateLabel, mood }
   const [chartLoading, setChartLoading] = useState(false);
   const [chartError, setChartError] = useState(null);
 
-  // fetch wellness tips (your existing logic, unchanged)
+  // helper: centralized token getter (reads latest token from localStorage)
+  function getAuthToken() {
+    return localStorage.getItem("token");
+  }
+
+  // fetch wellness tips
   function getTodayUTCDateString() {
     const now = new Date();
     const yyyy = now.getUTCFullYear();
@@ -66,100 +72,98 @@ export default function Dashboard() {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-useEffect(() => {
-  let mounted = true;
+  useEffect(() => {
+    let mounted = true;
 
-  async function fetchTips(dateStr = getTodayUTCDateString()) {
-    setTipsLoading(true);
-    setTipsError(null);
+    async function fetchTips(dateStr = getTodayUTCDateString()) {
+      setTipsLoading(true);
+      setTipsError(null);
 
-    try {
-      const token = getAuthToken();
-      const headers = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      };
-      if (token) headers.Authorization = `Bearer ${token}`;
+      try {
+        const tokenLocal = getAuthToken();
+        const headers = {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          
+        };
+        if (tokenLocal) headers.Authorization = `Bearer ${tokenLocal}`;
 
-      // use API_ROOT if non-empty, otherwise rely on relative path ("/api/...")
-      const base = API_ROOT ? API_ROOT : "";
-      const url = `${base}/api/wellness/daily?date=${encodeURIComponent(
-        dateStr
-      )}&n=5`;
+        // use API_BASE (was API_ROOT - undefined)
+        const base = API_BASE ? API_BASE : "";
+        const url = `${base}/api/wellness/daily?date=${encodeURIComponent(
+          dateStr
+        )}&n=5`;
 
-      const res = await fetch(url, { headers });
+        const res = await fetch(url, { headers });
 
-      // Helpful diagnostics — log status & body when not OK
-      if (!res.ok) {
-        // try to parse json body for server message
-        let bodyText;
-        try {
-          bodyText = await res.json();
-        } catch (e) {
-          bodyText = await res.text().catch(() => "(no body)");
+        if (!res.ok) {
+          // try parsing json message if any
+          let body;
+          try {
+            body = await res.json();
+          } catch (e) {
+            body = await res.text().catch(() => "(no body)");
+          }
+          const msg = body && body.message ? body.message : JSON.stringify(body);
+          console.warn("fetchTips failed:", res.status, msg, url);
+          throw new Error(msg || `HTTP ${res.status}`);
         }
-        const msg =
-          bodyText && bodyText.message
-            ? bodyText.message
-            : JSON.stringify(bodyText);
-        console.warn("fetchTips failed:", res.status, msg, url);
-        throw new Error(msg || `HTTP ${res.status}`);
-      }
 
-      const json = await res.json();
-      if (!mounted) return;
+        const json = await res.json();
+        console.log(json,"---")
+        if (!mounted) return;
 
-      // handle flexible payloads: { tips: [...] } or array
-      const tipsArray = Array.isArray(json) ? json : json.tips || [];
-      setDailyTips(tipsArray);
-    } catch (err) {
-      console.error("fetch tips error", err);
-      if (mounted) {
-        // display friendly error but keep console logs for debugging
-        setTipsError(
-          err.message?.toString() ||
-            "Unable to fetch wellness tips. Check console for details."
-        );
+        // accept array or { tips: [...] }
+        const tipsArray = Array.isArray(json) ? json : json.tips || [];
+        setDailyTips(tipsArray);
+      } catch (err) {
+        console.error("fetch tips error", err);
+        if (mounted) {
+          setTipsError(
+            err.message?.toString() ||
+              "Unable to fetch wellness tips. Check console for details."
+          );
+        }
+      } finally {
+        if (mounted) setTipsLoading(false);
       }
-    } finally {
-      if (mounted) setTipsLoading(false);
     }
-  }
 
-  // initial fetch
-  fetchTips();
-  // expose for dev debugging
-  window.refetchWellnessTips = (dateStr) => fetchTips(dateStr);
+    // initial fetch
+    fetchTips();
+    // expose for dev debugging
+    window.refetchWellnessTips = (dateStr) => fetchTips(dateStr);
 
-  return () => {
-    mounted = false;
-  };
-}, []); // token removed from deps because we read token inside effect via getAuthToken()
+    return () => {
+      mounted = false;
+    };
+  }, []); // no token dependency: we read token inside effect via getAuthToken()
 
-
-  // ---- new: fetch moods for the chart ----
+  // ---- fetch moods for the chart ----
   useEffect(() => {
     let mounted = true;
     async function fetchMoodsForChart() {
       setChartLoading(true);
       setChartError(null);
       try {
-        // We'll request the current month (server already supports year/month).
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, "0");
         const qs = `year=${year}&month=${month}`;
         const headers = { "Content-Type": "application/json" };
-        if (token) headers.Authorization = `Bearer ${token}`;
+        const tokenLocal = getAuthToken();
+        if (tokenLocal) headers.Authorization = `Bearer ${tokenLocal}`;
         if (username) headers["x-username"] = username;
 
-        const res = await fetch(`${API_BASE}/api/mood?${qs}`, { headers });
+        const res = await fetch(`${API_BASE}/api/mood?${qs}`, {
+          headers,
+        });
+
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.message || "Failed to load moods for chart");
         }
         const json = await res.json();
-        // normalize incoming payload shape flexibly
         const raw = Array.isArray(json) ? json : json.moods || json;
 
         // map by date string (YYYY-MM-DD) using common date fields
@@ -171,8 +175,9 @@ useEffect(() => {
           const parsed = dateStr ? new Date(dateStr) : null;
           if (parsed && !isNaN(parsed.getTime())) {
             const key = toYYYYMMDD(parsed);
-            // compute numeric value if possible
-            const numeric = moodToNumber(entry.mood);
+            // compute numeric value if possible (entry.mood or entry.value)
+            const numeric =
+              moodToNumber(entry.mood) ?? moodToNumber(entry.value) ?? null;
             byDate.set(key, { raw: entry, numeric, note: entry.note || "" });
           }
         });
@@ -186,12 +191,12 @@ useEffect(() => {
           const label = d.toLocaleString(undefined, {
             month: "short",
             day: "numeric",
-          }); // e.g. "Apr 16"
+          });
           const hit = byDate.get(iso);
           out.push({
             dateISO: iso,
             dateLabel: label,
-            mood: hit ? hit.numeric : null, // null will break the line (no numeric entry)
+            mood: hit ? hit.numeric : null,
           });
         }
 
@@ -212,11 +217,7 @@ useEffect(() => {
     return () => {
       mounted = false;
     };
-  }, [token, username]);
-
-  // keep the rest of your dashboard UI but swap the static chart for chartData
-  // (chartData: array of { dateLabel, mood })
-  // Example fallback message when there is no numeric data in the last 7 days.
+  }, [username]); // token read inside effect; username kept as dep so different users refetch
 
   return (
     <div>
@@ -279,7 +280,7 @@ useEffect(() => {
           {!tipsLoading && dailyTips.length > 0 && (
             <ul className="tips-list">
               {dailyTips.map((t) => (
-                <li key={t.id} className="tip-item">
+                <li key={t.id || t.tip} className="tip-item">
                   <div className="tip-content">
                     <div className="tip-text">{t.tip}</div>
                     {t.category && <div className="tip-meta">{t.category}</div>}
