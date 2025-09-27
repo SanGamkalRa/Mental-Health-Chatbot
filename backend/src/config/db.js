@@ -1,4 +1,31 @@
 // src/config/db.js
+// Supports two modes:
+// - DB_TYPE=dynamo -> skip Sequelize init and export a minimal stub
+// - otherwise     -> run Sequelize init (MySQL) and export models + init()
+
+const DB_TYPE = (process.env.DB_TYPE || 'mysql').toLowerCase();
+
+if (DB_TYPE === 'dynamo') {
+  console.log('DB_TYPE=dynamo — skipping Sequelize init');
+  module.exports = {
+    DB_TYPE,
+    sequelize: null,
+    Sequelize: null,
+    User: null,
+    Message: null,
+    Mood: null,
+    WellnessTip: null,
+    Conversation: null,
+    // init is a no-op in dynamo mode so callers can still await it
+    init: async (opts = {}) => {
+      return;
+    }
+  };
+  return;
+}
+
+// === SQL mode (Sequelize) ===
+// Only reached when DB_TYPE !== 'dynamo'
 const { Sequelize, DataTypes } = require('sequelize');
 const path = require('path');
 
@@ -29,31 +56,45 @@ const Message = require('../models/message.model')(sequelize, DataTypes);
 const Mood = require('../models/mood.model')(sequelize, DataTypes);
 const WellnessTip = require('../models/wellnessTip.model')(sequelize, DataTypes);
 
-// New: Conversation model
-// Create src/models/conversation.model.js as described previously if not already present
-const Conversation = require('../models/conversation.model')(sequelize, DataTypes);
+// Conversation model (if present)
+let Conversation = null;
+try {
+  Conversation = require('../models/conversation.model')(sequelize, DataTypes);
+} catch (e) {
+  // If conversation model missing, keep it null but don't crash startup
+  console.warn('Conversation model not found or failed to load:', e.message || e);
+}
 
 // === Associations ===
 // NOTE: models use underscored: true, so DB columns are `user_id`, `conversation_id`, etc.
-// Use underscored foreignKey names to match model definitions and avoid Sequelize creating extra fields.
 
-// User <-> Message
-User.hasMany(Message, { foreignKey: 'user_id', as: 'messages' });
-Message.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+try {
+  // User <-> Message
+  if (User && Message) {
+    User.hasMany(Message, { foreignKey: 'user_id', as: 'messages' });
+    Message.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+  }
 
-// Conversation <-> Message
-Conversation.hasMany(Message, { foreignKey: 'conversation_id', as: 'messages', onDelete: 'CASCADE' });
-Message.belongsTo(Conversation, { foreignKey: 'conversation_id', as: 'conversation' });
+  // Conversation <-> Message
+  if (Conversation && Message) {
+    Conversation.hasMany(Message, { foreignKey: 'conversation_id', as: 'messages', onDelete: 'CASCADE' });
+    Message.belongsTo(Conversation, { foreignKey: 'conversation_id', as: 'conversation' });
+  }
 
-// Conversation <-> User (optional owner)
-Conversation.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
-User.hasMany(Conversation, { foreignKey: 'user_id', as: 'conversations' });
+  // Conversation <-> User (optional owner)
+  if (Conversation && User) {
+    Conversation.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+    User.hasMany(Conversation, { foreignKey: 'user_id', as: 'conversations' });
+  }
 
-// User <-> Mood
-User.hasMany(Mood, { foreignKey: 'user_id', as: 'moods' });
-Mood.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
-
-// WellnessTip is global/static; no user relations required (but you can add if needed)
+  // User <-> Mood
+  if (User && Mood) {
+    User.hasMany(Mood, { foreignKey: 'user_id', as: 'moods' });
+    Mood.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+  }
+} catch (assocErr) {
+  console.warn('Error setting up Sequelize associations:', assocErr && (assocErr.message || assocErr));
+}
 
 module.exports = {
   sequelize,
