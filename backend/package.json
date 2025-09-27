@@ -7,13 +7,13 @@
     "dev": "nodemon server.js",
     "migrate": "node src/config/db.js",
     "migrate:dynamo": "node src/scripts/migrate_mysql_to_dynamo.js"
-
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.896.0",
     "@aws-sdk/lib-dynamodb": "^3.896.0",
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.0.0",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",

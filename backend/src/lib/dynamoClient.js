@@ -4,26 +4,33 @@ const { DynamoDBDocumentClient } = require("@aws-sdk/lib-dynamodb");
 
 const REGION = process.env.AWS_REGION || "us-east-1";
 
-// accept either name for compatibility
-const endpoint = process.env.DYNAMODB_ENDPOINT || process.env.DYNAMO_ENDPOINT || "http://localhost:8000";
+// Only use endpoint if explicitly provided in env (do NOT default to localhost here)
+const endpointEnv = process.env.DYNAMODB_ENDPOINT || process.env.DYNAMO_ENDPOINT || undefined;
 
-console.log(`[dynamoClient] REGION=${REGION} endpoint=${endpoint}`);
+// Provide credentials if explicitly set in env — otherwise rely on standard AWS credential resolution
+const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
 
-const options = {
-  region: REGION,
-  // when using local Dynamo, endpoint should be provided
-  endpoint,
-  // Provide dummy credentials for local dev (Dynamo local accepts any creds)
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "local",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "local",
-  },
-};
+console.log(`[dynamoClient] REGION=${REGION} endpoint=${endpointEnv ? endpointEnv : "<none>"} usingEnvCreds=${!!(accessKeyId && secretAccessKey)}`);
 
-// If in actual AWS environment you don't want to pass a custom endpoint, unset the env var.
-// The SDK will still work when endpoint === undefined, but for clarity we provided a default
-// to local dev so you don't accidentally talk to AWS.
-const client = new DynamoDBClient(options);
+const clientOptions = { region: REGION };
+
+// add endpoint only if provided (local dev)
+if (endpointEnv) {
+  clientOptions.endpoint = endpointEnv;
+}
+
+// if credentials provided (e.g., for local or for simple testing), add them.
+// In production prefer IAM roles / AWS CLI profile / environment from EC2/ECS/EKS.
+if (accessKeyId && secretAccessKey) {
+  clientOptions.credentials = {
+    accessKeyId,
+    secretAccessKey,
+  };
+}
+
+// create client and document client
+const client = new DynamoDBClient(clientOptions);
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 module.exports = { ddbDocClient, client };

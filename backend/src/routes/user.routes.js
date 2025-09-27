@@ -7,3 +7,5 @@ const userCtrl = require('../controllers/user.controller');
 router.get('/', requireAuth, userCtrl.getAllUsers);
 
 module.exports = router;
+
+
