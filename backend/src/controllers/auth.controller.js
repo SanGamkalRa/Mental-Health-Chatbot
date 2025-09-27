@@ -1,6 +1,6 @@
 // src/controllers/auth.dynamo.controller.js
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID } = require('crypto');
 const { ddbDocClient } = require('../lib/dynamoClient');
 const {
   QueryCommand,
@@ -267,8 +267,7 @@ async function register(req, res) {
     while (attempts < MAX_USERNAME_ATTEMPTS) {
       attempts += 1;
       const candidate = attempts === 1 ? baseCandidate : await reserveUniqueUsername(baseCandidate);
-      const id = uuidv4();
-      const now = Date.now();
+const id = randomUUID();      const now = Date.now();
 
       const item = {
         id,
