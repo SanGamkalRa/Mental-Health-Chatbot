@@ -12,6 +12,11 @@ export default function Profile() {
   const [name, setName] = useState(localStorage.getItem("userName") || "");
   const [email, setEmail] = useState(localStorage.getItem("userEmail") || "");
   const [registered, setRegistered] = useState(localStorage.getItem("userRegistered") === "true");
+    const [profileImage] = useState(
+    "https://via.placeholder.com/150.png?text=Profile" 
+    // Example placeholder. Replace with your S3 bucket URL:
+    // "https://<your-bucket-name>.s3.us-east-1.amazonaws.com/profile.png"
+  );
   const [editingEmail, setEditingEmail] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -172,10 +177,17 @@ export default function Profile() {
       <div className="profile-card">
         {/* LEFT COLUMN */}
         <div className="profile-left">
-          <div className="profile-header">
-            <h2>Profile</h2>
+         <div className="profile-preview">
+            {profileImage ? (
+              <img src={profileImage} alt="Profile" className="avatar-img" />
+            ) : (
+              <div className="avatar">{initials}</div>
+            )}
+            <div className="preview-meta">
+              <div className="preview-role">Mind Care</div>
+              <div className="preview-name">{name || "User"}</div>
+            </div>
           </div>
-
           <div className="form-row">
             <label className="field-label">Display name</label>
             <input
