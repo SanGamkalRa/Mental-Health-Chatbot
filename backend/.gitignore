@@ -29,7 +29,7 @@ bower_components/
 .env.development.local
 .env.test.local
 .env.production.local
-.evn
+.env
 
 npm-debug.log*
 yarn-debug.log*
